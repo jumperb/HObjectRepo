@@ -123,7 +123,7 @@
     return [[self.class p_repo] objectExsitForID:ID];
 }
 + (void)p_remove:(NSString *)ID {
-    [[self p_fromID:ID] p_remove];
+    [[self p_repo] removeObjectForID:ID];
 }
 - (void)p_remove {
     [[self.class p_repo] removeObjectForID:self.ID];
