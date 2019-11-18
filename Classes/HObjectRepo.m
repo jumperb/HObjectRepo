@@ -89,6 +89,9 @@
     }
     return objects;
 }
+- (NSUInteger)count {
+    return [self allFileNames].count;
+}
 @end
 
 
@@ -131,10 +134,10 @@
 - (void)p_save {
     [[self.class p_repo] setObject:self forID:self.ID];
 }
-- (NSArray *)p_all {
-    return [[self.class p_repo] all];
++ (NSArray *)p_all {
+    return [[self p_repo] all];
 }
-- (NSArray *)p_filter:(BOOL (^)(NSObject *obj))filter {
++ (NSArray *)p_filter:(BOOL (^)(NSObject *obj))filter {
     NSArray *arr = [self p_all];
     if (!filter) return arr;
     NSMutableArray *res = [NSMutableArray new];
@@ -144,5 +147,8 @@
         }
     }
     return res;
+}
++ (NSUInteger)p_count {
+    return [[self p_repo] count];
 }
 @end

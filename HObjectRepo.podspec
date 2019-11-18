@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "HObjectRepo"
-  s.version      = "1.0.1"
+  s.version      = "1.0.2"
   s.summary      = "It's a object storage"
 
   s.description  = <<-DESC
