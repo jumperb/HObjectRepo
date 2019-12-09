@@ -114,7 +114,7 @@
     HObjectRepo *repo = repoMap[classKey];
     if (!repo) {
         NSString *path = [NSString stringWithFormat:@"object-repo/%@", classKey];
-        repo = [[HObjectRepo alloc] initWithCacheDir:[NSFileManager documentPath:path]];
+        repo = [[HObjectRepo alloc] initWithObjClass:self cacheDir:path];
         repoMap[classKey] = repo;
     }
     return repo;
