@@ -56,6 +56,7 @@
     NSObject *o = [self.objClass new];
     NSError *err = [o h_setWithDictionary:dict enableKeyMap:NO couldEmpty:YES];
     if (err) {
+        NSAssert(NO, err.localizedDescription);
         return nil;
     }
     return o;
@@ -113,7 +114,7 @@
     NSString *classKey = [self p_classKey];
     HObjectRepo *repo = repoMap[classKey];
     if (!repo) {
-        NSString *path = [NSString stringWithFormat:@"object-repo/%@", classKey];
+        NSString *path = [NSFileManager documentPath:[NSString stringWithFormat:@"object-repo/%@", classKey]];
         repo = [[HObjectRepo alloc] initWithObjClass:self cacheDir:path];
         repoMap[classKey] = repo;
     }
