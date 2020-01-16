@@ -73,9 +73,12 @@
 - (BOOL)objectExsitForID:(NSString *)ID {
     return ([self objectForID:ID] != nil);
 }
+- (NSArray *)ids {
+    return [self allFileNames];
+}
 - (NSArray *)all {
     NSMutableArray *objects = [NSMutableArray new];
-    NSArray *files = [self allFileNames];
+    NSArray *files = [self ids];
     for (NSString *fileName in files) {
         NSString *filePath = [self.cacheDir stringByAppendingPathComponent:fileName];
         NSData *data = [NSData dataWithContentsOfFile:filePath];
@@ -90,8 +93,9 @@
     }
     return objects;
 }
+
 - (NSUInteger)count {
-    return [self allFileNames].count;
+    return [self ids].count;
 }
 @end
 
@@ -134,6 +138,9 @@
 }
 - (void)p_save {
     [[self.class p_repo] setObject:self forID:self.ID];
+}
++ (NSArray *)p_ids {
+    return [[self p_repo] ids];
 }
 + (NSArray *)p_all {
     return [[self p_repo] all];

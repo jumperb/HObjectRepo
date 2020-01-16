@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setObject:(id)o forID:(NSString *)ID;
 - (void)removeObjectForID:(NSString *)ID;
 - (BOOL)objectExsitForID:(NSString *)ID;
+- (NSArray *)ids;
 - (NSUInteger)count;
 @end
 
@@ -28,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)p_remove;
 //存磁盘
 - (void)p_save;
+//全部id
++ (NSArray *)p_ids;
 //全部
 + (NSArray *)p_all;
 //返回NO，h过滤掉
