@@ -71,7 +71,8 @@
     [self setData:data forKey:ID];
 }
 - (BOOL)objectExsitForID:(NSString *)ID {
-    return ([self objectForID:ID] != nil);
+    if (self.cache[ID]) return YES;
+    return [self cacheExsitForKey:ID];
 }
 - (NSArray *)ids {
     return [self allFileNames];
