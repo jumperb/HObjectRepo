@@ -15,6 +15,7 @@
 @interface HObjectRepo ()
 @property (nonatomic) Class objClass;
 @property (nonatomic) NSMutableDictionary *cache;
+@property (nonatomic) BOOL hasLoadAll;
 @end
 
 @implementation HObjectRepo
@@ -78,21 +79,26 @@
     return [self allFileNames];
 }
 - (NSArray *)all {
-    NSMutableArray *objects = [NSMutableArray new];
-    NSArray *files = [self ids];
-    for (NSString *fileName in files) {
-        NSString *filePath = [self.cacheDir stringByAppendingPathComponent:fileName];
-        NSData *data = [NSData dataWithContentsOfFile:filePath];
-        NSObject *o = [self objectFromData:data];
-        if (o) {
-            [objects addObject:o];
-            self.cache[o.ID] = o;
+    if (!self.hasLoadAll) {
+        NSMutableArray *objects = [NSMutableArray new];
+        NSArray *files = [self ids];
+        for (NSString *fileName in files) {
+            NSString *filePath = [self.cacheDir stringByAppendingPathComponent:fileName];
+            NSData *data = [NSData dataWithContentsOfFile:filePath];
+            NSObject *o = [self objectFromData:data];
+            if (o) {
+                [objects addObject:o];
+                self.cache[o.ID] = o;
+            }
+            else {
+                [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
+            }
         }
-        else {
-            [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
-        }
+        return objects;
     }
-    return objects;
+    else {
+        return self.cache.allValues;
+    }
 }
 
 - (NSUInteger)count {
