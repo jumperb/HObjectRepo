@@ -11,11 +11,13 @@
 #import <Hodor/NSData+ext.h>
 #import <Hodor/NSObject+ext.h>
 #import <Hodor/NSFileManager+ext.h>
+#import <Hodor/HGCDext.h>
 
 @interface HObjectRepo ()
 @property (nonatomic) Class objClass;
 @property (nonatomic) NSMutableDictionary *cache;
 @property (nonatomic) BOOL hasLoadAll;
+@property (nonatomic) dispatch_queue_t cacheQueue;
 @end
 
 @implementation HObjectRepo
@@ -26,6 +28,7 @@
     if (self) {
         self.objClass = class;
         self.shouldEncodeKey = NO;
+        self.cacheQueue = dispatch_queue_create("HObjectRepo.cacheQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -34,19 +37,26 @@
     return _cache;
 }
 - (id)objectForID:(NSString *)ID {
-    NSObject *o = self.cache[ID];
-    if (o) return o;
-    
-    NSData *data = [self dataForKey:ID];
-    o = [self objectFromData:data];
-    if (!o) {
-        [self removeFileForKey:ID];
-        return nil;
-    }
-    else {
-        self.cache[ID] = o;
-    }
-    return o;
+    __block id res = nil;
+    syncAtQueue(self.cacheQueue, ^{
+        NSObject *o = self.cache[ID];
+        if (o) {
+            res = o;
+            return;
+        }
+        
+        NSData *data = [self dataForKey:ID];
+        o = [self objectFromData:data];
+        if (!o) {
+            [self removeFileForKey:ID];
+            return;
+        }
+        else {
+            self.cache[ID] = o;
+        }
+        res = o;
+    });
+    return res;
 }
 - (id)objectFromData:(NSData *)data {
     if (!data) return nil;
@@ -63,42 +73,65 @@
     return o;
 }
 - (void)removeObjectForID:(NSString *)ID {
-    [self.cache removeObjectForKey:ID];
-    [self removeFileForKey:ID];
+    syncAtQueue(self.cacheQueue, ^{
+        [self.cache removeObjectForKey:ID];
+        [self removeFileForKey:ID];
+    });
 }
 - (void)setObject:(id)o forID:(NSString *)ID {
-    self.cache[ID] = o;
-    NSData *data = [[o jsonString] dataUsingEncoding:NSUTF8StringEncoding];
-    [self setData:data forKey:ID];
+    syncAtQueue(self.cacheQueue, ^{
+        self.cache[ID] = o;
+        NSData *data = [[o jsonString] dataUsingEncoding:NSUTF8StringEncoding];
+        [self setData:data forKey:ID];
+    });
 }
 - (BOOL)objectExsitForID:(NSString *)ID {
-    if (self.cache[ID]) return YES;
-    return [self cacheExsitForKey:ID];
+    __block BOOL res = NO;
+    syncAtQueue(self.cacheQueue, ^{
+        if (self.cache[ID]) {
+            res = YES;
+        }
+        else {
+            res = [self cacheExsitForKey:ID];
+        }
+    });
+    return res;
 }
 - (NSArray *)ids {
+    __block NSArray *res = nil;
+    syncAtQueue(self.cacheQueue, ^{
+        res = [self _ids];
+    });
+    return res;
+}
+- (NSArray *)_ids {
     return [self allFileNames];
 }
 - (NSArray *)all {
-    if (!self.hasLoadAll) {
-        NSMutableArray *objects = [NSMutableArray new];
-        NSArray *files = [self ids];
-        for (NSString *fileName in files) {
-            NSString *filePath = [self.cacheDir stringByAppendingPathComponent:fileName];
-            NSData *data = [NSData dataWithContentsOfFile:filePath];
-            NSObject *o = [self objectFromData:data];
-            if (o) {
-                [objects addObject:o];
-                self.cache[o.ID] = o;
+    __block NSArray *res = nil;
+    syncAtQueue(self.cacheQueue, ^{
+        if (!self.hasLoadAll) {
+            NSMutableArray *objects = [NSMutableArray new];
+            NSArray *files = [self _ids];
+            for (NSString *fileName in files) {
+                NSString *filePath = [self.cacheDir stringByAppendingPathComponent:fileName];
+                NSData *data = [NSData dataWithContentsOfFile:filePath];
+                NSObject *o = [self objectFromData:data];
+                if (o) {
+                    [objects addObject:o];
+                    self.cache[o.ID] = o;
+                }
+                else {
+                    [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
+                }
             }
-            else {
-                [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
-            }
+            res = objects;
         }
-        return objects;
-    }
-    else {
-        return self.cache.allValues;
-    }
+        else {
+            res = self.cache.allValues;
+        }
+    });
+    return res;
 }
 
 - (NSUInteger)count {
