@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "HObjectRepo"
-  s.version      = "1.0.8"
+  s.version      = "1.0.9"
   s.summary      = "It's a object storage"
 
   s.description  = <<-DESC
@@ -25,6 +25,6 @@ Pod::Spec.new do |s|
   s.dependency 'HCache'
   s.requires_arc = true
   
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '9.0'
   
 end
