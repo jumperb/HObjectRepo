@@ -60,7 +60,7 @@
 }
 - (id)objectFromData:(NSData *)data {
     if (!data) return nil;
-    NSDictionary *dict = [data JSONValue];
+    NSDictionary *dict = [data h_JSONValue];
     if (!dict) {
         return nil;
     }
@@ -81,7 +81,7 @@
 - (void)setObject:(id)o forID:(NSString *)ID {
     syncAtQueue(self.cacheQueue, ^{
         self.cache[ID] = o;
-        NSData *data = [[o jsonString] dataUsingEncoding:NSUTF8StringEncoding];
+        NSData *data = [[o h_jsonString] dataUsingEncoding:NSUTF8StringEncoding];
         [self setData:data forKey:ID];
     });
 }
